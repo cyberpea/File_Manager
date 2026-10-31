@@ -1,0 +1,20 @@
+# Secrets
+.env
+
+# OS
+.DS_Store
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# IDE
+.idea/
+
+# Databases
+*.db
+*.sqlite3
+
+# App Data
+storage/
