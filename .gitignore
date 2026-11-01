@@ -18,3 +18,5 @@ __pycache__/
 
 # App Data
 storage/
+
+CLAUDE.md
