@@ -1,8 +1,18 @@
 import hashlib
 import secrets
 import hmac
+import re
+import sqlite3
 
-from file_manager.config import PBKDF2_ITERATIONS, SALT_SIZE, PBKDF2_MAX_ITERATIONS
+from file_manager.config import (
+    PBKDF2_ITERATIONS,
+    SALT_SIZE,
+    PBKDF2_MAX_ITERATIONS,
+    USERNAME_PATTERN,
+    PASSWORD_MAX_LENGTH,
+    PASSWORD_MIN_LENGTH
+)
+from file_manager.db import get_connection
 
 
 def hash_password(password):
@@ -38,3 +48,58 @@ def verify_password(password, stored_hash):
         return hmac.compare_digest(digest, bytes.fromhex(hash_hex))
     except ValueError:
         return False
+
+
+def validate_username(username):
+    """Валидация логина"""
+    if re.fullmatch(USERNAME_PATTERN, username) is None:
+        raise ValueError("Логин: 3-32 символа, латинские буквы, цифры, _")
+
+
+def validate_password(password):
+    """Валидация пароля"""
+    if not (PASSWORD_MIN_LENGTH <= len(password) <= PASSWORD_MAX_LENGTH):
+        raise ValueError(f"Длина пароля: {PASSWORD_MIN_LENGTH}-{PASSWORD_MAX_LENGTH} символов")
+
+
+def register_user(username, password):
+    """Регистрация пользователя"""
+    username = username.lower()
+    validate_username(username)
+    validate_password(password)
+    password_hash = hash_password(password)
+    connection = get_connection()
+    try:
+        with connection:
+            cursor = connection.execute(
+                "INSERT INTO users (username, password_hash) VALUES (?, ?)",
+                (username, password_hash),
+            )
+        return cursor.lastrowid
+    except sqlite3.IntegrityError:
+        raise ValueError("Логин занят") from None
+    finally:
+        connection.close()
+
+
+DUMMY_HASH = hash_password(secrets.token_hex(16))
+
+
+def login_user(username, password):
+    """Аутентификация"""
+    username = username.lower()
+    connection = get_connection()
+    try:
+        row = connection.execute(
+            "SELECT id, password_hash FROM users WHERE username = ?",
+            (username,),
+        ).fetchone()
+    finally:
+        connection.close()
+    if row is None:
+        verify_password(password, DUMMY_HASH)
+        return None
+    user_id, password_hash = row
+    if verify_password(password, password_hash):
+        return user_id
+    return None

@@ -1,4 +1,5 @@
 from pathlib import Path
+import re
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 STORAGE_DIR = BASE_DIR / "storage"
@@ -7,6 +8,9 @@ DB_PATH = DATA_DIR / "file_manager.db"
 PBKDF2_ITERATIONS = 600_000
 PBKDF2_MAX_ITERATIONS = 2_000_000
 SALT_SIZE = 16
+USERNAME_PATTERN = r"[A-Za-z0-9_]{3,32}"
+PASSWORD_MIN_LENGTH = 8
+PASSWORD_MAX_LENGTH = 128
 
 
 def ensure_directories():
