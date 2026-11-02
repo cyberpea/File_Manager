@@ -13,8 +13,7 @@ __pycache__/
 .idea/
 
 # Databases
-*.db
-*.sqlite3
+data/
 
 # App Data
 storage/
