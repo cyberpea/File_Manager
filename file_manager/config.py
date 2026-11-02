@@ -4,6 +4,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 STORAGE_DIR = BASE_DIR / "storage"
 DATA_DIR = BASE_DIR / "data"
 DB_PATH = DATA_DIR / "file_manager.db"
+PBKDF2_ITERATIONS = 600_000
+PBKDF2_MAX_ITERATIONS = 2_000_000
+SALT_SIZE = 16
 
 
 def ensure_directories():
