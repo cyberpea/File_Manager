@@ -10,10 +10,10 @@ def get_connection():
 
 
 SCHEMA = """
-CREATE TABLE IF NOT EXISTS users (                                                                                                                                            
-      id INTEGER PRIMARY KEY AUTOINCREMENT,                                                                                                                          
-      username TEXT NOT NULL UNIQUE,                                                                                                                                    
-      password_hash TEXT NOT NULL                                                                                                                                            
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS files (
@@ -43,5 +43,7 @@ def init_db():
     connection = get_connection()
     # executescript используем только для SCHEMA: это неизменяемый текст из нашего же кода.
     # Всё, где есть данные извне, выполняется через execute с ?
-    connection.executescript(SCHEMA)
-    connection.close()
+    try:
+        connection.executescript(SCHEMA)
+    finally:
+        connection.close()
