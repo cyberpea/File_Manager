@@ -13,6 +13,7 @@ from file_manager.config import (
     PASSWORD_MIN_LENGTH
 )
 from file_manager.db import get_connection
+from file_manager.audit import log_event
 
 
 def hash_password(password):
@@ -75,7 +76,9 @@ def register_user(username, password):
                 "INSERT INTO users (username, password_hash) VALUES (?, ?)",
                 (username, password_hash),
             )
-        return cursor.lastrowid
+            user_id = cursor.lastrowid
+        log_event(event_type="register", user_id=user_id)
+        return user_id
     except sqlite3.IntegrityError:
         raise ValueError("Логин занят") from None
     finally:
@@ -96,10 +99,21 @@ def login_user(username, password):
         ).fetchone()
     finally:
         connection.close()
+    safe_name = _safe_username(username)
     if row is None:
         verify_password(password, DUMMY_HASH)
+        log_event(event_type="login_failed", details=safe_name)
         return None
     user_id, password_hash = row
     if verify_password(password, password_hash):
+        log_event(event_type="login_success", user_id=user_id)
         return user_id
+    log_event(event_type="login_failed", user_id=user_id, details=safe_name)
     return None
+
+
+def _safe_username(username):
+    """Логин для журнала: как есть, если подходит белый список, иначе заглушка"""
+    if re.fullmatch(USERNAME_PATTERN, username) is None:
+        username = "<некорректный логин>"
+    return username
