@@ -11,6 +11,8 @@ SALT_SIZE = 16
 USERNAME_PATTERN = r"[A-Za-z0-9_]{3,32}"
 PASSWORD_MIN_LENGTH = 8
 PASSWORD_MAX_LENGTH = 128
+AUDIT_EVENT_TYPES = {"register", "login_success", "login_failed", "access_denied", "limit_exceeded"}
+AUDIT_DETAILS_MAX_LENGTH = 500
 
 
 def ensure_directories():
