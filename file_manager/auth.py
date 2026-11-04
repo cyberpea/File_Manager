@@ -10,10 +10,12 @@ from file_manager.config import (
     PBKDF2_MAX_ITERATIONS,
     USERNAME_PATTERN,
     PASSWORD_MAX_LENGTH,
-    PASSWORD_MIN_LENGTH
+    PASSWORD_MIN_LENGTH,
+    LOGIN_MAX_FAILURES,
+    LOGIN_LOCKOUT_MINUTES
 )
 from file_manager.db import get_connection
-from file_manager.audit import log_event
+from file_manager.audit import log_event, count_recent_failures
 
 
 def hash_password(password):
@@ -100,11 +102,16 @@ def login_user(username, password):
     finally:
         connection.close()
     safe_name = _safe_username(username)
+    user_id = None
+    if row is not None:
+        user_id, password_hash = row
+    if count_recent_failures(details=safe_name, minutes=LOGIN_LOCKOUT_MINUTES) >= LOGIN_MAX_FAILURES:
+        log_event(event_type="login_failed", user_id=user_id, details=safe_name)
+        raise ValueError("Слишком много неудачных попыток, попробуйте позже")
     if row is None:
         verify_password(password, DUMMY_HASH)
         log_event(event_type="login_failed", details=safe_name)
         return None
-    user_id, password_hash = row
     if verify_password(password, password_hash):
         log_event(event_type="login_success", user_id=user_id)
         return user_id

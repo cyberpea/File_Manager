@@ -18,3 +18,19 @@ def log_event(event_type, user_id=None, details=None):
         return cursor.lastrowid
     finally:
         connection.close()
+
+
+def count_recent_failures(details, minutes):
+    """Логин для журнала: как есть, если проходит белый список, иначе заглушка"""
+    connection = get_connection()
+    try:
+        cursor = connection.execute(
+            """
+            SELECT COUNT(*) FROM audit_log
+            WHERE event_type = ? AND details = ? AND timestamp >= datetime('now', ?)
+            """,
+            ("login_failed", details, f"-{minutes} minutes"),
+        )
+        return cursor.fetchone()[0]
+    finally:
+        connection.close()
