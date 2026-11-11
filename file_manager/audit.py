@@ -21,7 +21,7 @@ def log_event(event_type, user_id=None, details=None):
 
 
 def count_recent_failures(details, minutes):
-    """Считает logit_failed с данным details за последние minutes минут"""
+    """Считает login_failed с данным details за последние minutes минут"""
     connection = get_connection()
     try:
         cursor = connection.execute(
