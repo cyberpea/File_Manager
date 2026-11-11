@@ -14,6 +14,7 @@ AUDIT_EVENT_TYPES = {"register", "login_success", "login_failed", "access_denied
 AUDIT_DETAILS_MAX_LENGTH = 500
 LOGIN_MAX_FAILURES = 5
 LOGIN_LOCKOUT_MINUTES = 15
+MAX_FILE_SIZE = 10 * 1024 * 1024
 
 
 def ensure_directories():
