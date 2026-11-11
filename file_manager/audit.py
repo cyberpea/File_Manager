@@ -34,3 +34,11 @@ def count_recent_failures(details, minutes):
         return cursor.fetchone()[0]
     finally:
         connection.close()
+
+
+def log_operations(connection, operation_type, file_id, user_id, file_path):
+    """Записывает операцию с файлом в operations (в транзакции вызывающего)"""
+    connection.execute(
+        "INSERT INTO operations (operation_type, file_id, user_id, file_path) VALUES (?, ?, ?, ?)",
+        (operation_type, file_id, user_id, file_path),
+    )
