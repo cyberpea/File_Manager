@@ -104,3 +104,34 @@ def modify_file(user_id, filename, data):
     finally:
         connection.close()
     return path
+
+
+def delete_file(user_id, filename):
+    """Удаляет существующий файл в папке пользователя или бросает ValueError"""
+    validate_filename(filename)
+    path = resolve_safe_path(user_id, filename)
+    location = f"{user_id}/{filename}"
+    connection = get_connection()
+    try:
+        with connection:
+            row = connection.execute(
+                "SELECT id FROM files WHERE owner_id = ? AND filename = ?",
+                (user_id, filename),
+            ).fetchone()
+            if row is None:
+                raise ValueError("Файла с таким именем не существует")
+            file_id = row[0]
+            log_operations(connection, "delete", file_id, user_id, location)
+            connection.execute(
+                "DELETE FROM files WHERE id = ?",
+                (file_id,),
+            )
+            try:
+                os.unlink(path)
+            except FileNotFoundError:
+                pass
+            except OSError:
+                raise ValueError("Не удалось удалить файл") from None
+    finally:
+        connection.close()
+    return path
