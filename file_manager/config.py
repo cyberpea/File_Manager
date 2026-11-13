@@ -18,6 +18,7 @@ MAX_FILE_SIZE = 10 * 1024 * 1024
 FILENAME_PATTERN = r"[\w.\- ]{1,100}"
 JSON_MAX_DEPTH = 50
 XML_MAX_DEPTH = 50
+XML_NAME_PATTERN = r"[A-Za-z_][A-Za-z0-9_.\-]{0,63}"
 
 
 def ensure_directories():

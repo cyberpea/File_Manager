@@ -1,9 +1,11 @@
 import json
+import xml.etree.ElementTree as ET
+import re
 from defusedxml import ElementTree as DET, DefusedXmlException
 
 from file_manager.files import read_file, modify_file, create_file
 from file_manager.audit import log_event
-from file_manager.config import JSON_MAX_DEPTH, XML_MAX_DEPTH
+from file_manager.config import JSON_MAX_DEPTH, XML_MAX_DEPTH, XML_NAME_PATTERN
 
 
 def read_json(user_id, filename):
@@ -87,3 +89,36 @@ def _xml_too_deep(root):
         for child in current:
             todo.append((child, depth + 1))
     return False
+
+
+def write_xml(user_id, filename, root, overwrite=False):
+    """Сохраняет дерево элементов как XML-файл пользователя"""
+    if not isinstance(root, ET.Element):
+        raise ValueError("Ожидается XML-элемент")
+    if _xml_too_deep(root):
+        log_event("limit_exceeded", user_id, repr(filename))
+        raise ValueError("Слишком глубокая вложенность")
+    if not  _xml_names_ok(root):
+        raise ValueError("Недопустимое содержание файла")
+    try:
+        data = ET.tostring(root, encoding="utf-8", xml_declaration=True)
+        DET.fromstring(data, forbid_dtd=True)
+    except TypeError:
+        raise ValueError("Данные нельзя сохранить как XML") from None
+    except (DET.ParseError, ValueError):
+        raise ValueError("Файл не является корректным XML") from None
+    if overwrite:
+        return modify_file(user_id, filename, data)
+    return create_file(user_id, filename, data)
+
+
+def _xml_names_ok(root):
+    """Проверяет имена всех тегов и атрибутов по белому списку"""
+    for element in root.iter():
+        names = [element.tag]
+        for key in element.attrib:
+            names.append(key)
+        for name in names:
+            if not isinstance(name, str) or re.fullmatch(XML_NAME_PATTERN, name) is None:
+                return False
+    return True
