@@ -1,8 +1,9 @@
 import json
+from defusedxml import ElementTree as DET, DefusedXmlException
 
 from file_manager.files import read_file, modify_file, create_file
 from file_manager.audit import log_event
-from file_manager.config import JSON_MAX_DEPTH
+from file_manager.config import JSON_MAX_DEPTH, XML_MAX_DEPTH
 
 
 def read_json(user_id, filename):
@@ -58,3 +59,31 @@ def write_json(user_id, filename, obj, overwrite=False):
     if overwrite:
         return modify_file(user_id, filename, data)
     return create_file(user_id, filename, data)
+
+
+def read_xml(user_id, filename):
+    """Читает файл пользователя и разбирает его как XML, возвращает корневой элемент"""
+    data = read_file(user_id, filename)
+    try:
+        root = DET.fromstring(data, forbid_dtd=True)
+    except DefusedXmlException:
+        log_event("access_denied", user_id, repr(filename))
+        raise ValueError("Файл содержит запрещенные конструкции XML") from None
+    except (DET.ParseError, LookupError):
+        raise ValueError("Файл не является корректным XML") from None
+    if _xml_too_deep(root):
+        log_event("limit_exceeded", user_id, repr(filename))
+        raise ValueError("Слишком глубокая вложенность")
+    return root
+
+
+def _xml_too_deep(root):
+    """Проверяет без рекурсии, превышает ли вложенность XML_MAX_DEPTH"""
+    todo = [(root, 1)]
+    while todo:
+        current, depth = todo.pop()
+        if depth > XML_MAX_DEPTH:
+            return True
+        for child in current:
+            todo.append((child, depth + 1))
+    return False
