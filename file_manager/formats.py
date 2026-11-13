@@ -1,6 +1,6 @@
 import json
 
-from file_manager.files import read_file
+from file_manager.files import read_file, modify_file, create_file
 from file_manager.audit import log_event
 from file_manager.config import JSON_MAX_DEPTH
 
@@ -43,3 +43,18 @@ def _is_too_deep(obj):
 def _reject_constant(name):
     """Запрещает NaN и Infinity: их нет в стандарте JSON"""
     raise ValueError("Некорректные данные в файле")
+
+
+def write_json(user_id, filename, obj, overwrite=False):
+    """Сохраняет объект Python как JSON-файл пользователя"""
+    if _is_too_deep(obj):
+        log_event("limit_exceeded", user_id, repr(filename))
+        raise ValueError("Слишком глубокая вложенность")
+    try:
+        text = json.dumps(obj, ensure_ascii=False, indent=2, allow_nan=False)
+        data = text.encode("utf-8")
+    except (TypeError, ValueError):
+        raise ValueError("Данные нельзя сохранить как JSON") from None
+    if overwrite:
+        return modify_file(user_id, filename, data)
+    return create_file(user_id, filename, data)
