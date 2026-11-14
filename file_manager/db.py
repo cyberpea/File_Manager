@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS audit_log (
     timestamp TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     event_type TEXT NOT NULL CHECK (event_type IN (
     'register', 'login_success', 'login_failed',
-    'access_denied', 'limit_exceeded'
+    'access_denied', 'limit_exceeded', 'logout'
     )),
     user_id INTEGER,
     details TEXT,

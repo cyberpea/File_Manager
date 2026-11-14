@@ -10,7 +10,7 @@ SALT_SIZE = 16
 USERNAME_PATTERN = r"[A-Za-z0-9_]{3,32}"
 PASSWORD_MIN_LENGTH = 8
 PASSWORD_MAX_LENGTH = 128
-AUDIT_EVENT_TYPES = {"register", "login_success", "login_failed", "access_denied", "limit_exceeded"}
+AUDIT_EVENT_TYPES = {"register", "login_success", "login_failed", "access_denied", "limit_exceeded", "logout"}
 AUDIT_DETAILS_MAX_LENGTH = 500
 LOGIN_MAX_FAILURES = 5
 LOGIN_LOCKOUT_MINUTES = 15
@@ -22,6 +22,7 @@ XML_NAME_PATTERN = r"[A-Za-z_][A-Za-z0-9_.\-]{0,63}"
 ZIP_MAX_FILES = 100
 ZIP_MAX_TOTAL_SIZE = 50 * 1024 * 1024
 ZIP_MAX_RATIO = 100
+HISTORY_LIMIT = 30
 
 
 def ensure_directories():

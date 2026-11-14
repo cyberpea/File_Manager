@@ -42,3 +42,27 @@ def log_operations(connection, operation_type, file_id, user_id, file_path):
         "INSERT INTO operations (operation_type, file_id, user_id, file_path) VALUES (?, ?, ?, ?)",
         (operation_type, file_id, user_id, file_path),
     )
+
+
+def list_operations(user_id, limit):
+    """Последние операции пользователя с файлами: (timestamp, operation_type, file_path)"""
+    connection = get_connection()
+    try:
+        return connection.execute(
+            "SELECT timestamp, operation_type, file_path FROM operations WHERE user_id = ? ORDER BY id DESC LIMIT ?",
+            (user_id, limit),
+        ).fetchall()
+    finally:
+        connection.close()
+
+
+def list_events(user_id, limit):
+    """Последние события безопасности пользователя: (timestamp, event_type, details)"""
+    connection = get_connection()
+    try:
+        return connection.execute(
+            "SELECT timestamp, event_type, details FROM audit_log WHERE user_id = ? ORDER BY id DESC LIMIT ?",
+            (user_id, limit),
+        ).fetchall()
+    finally:
+        connection.close()
