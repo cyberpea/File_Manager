@@ -1,7 +1,7 @@
 import io
 import zipfile
 
-from file_manager.config import ZIP_MAX_FILES, ZIP_MAX_TOTAL_SIZE
+from file_manager.config import ZIP_MAX_FILES, ZIP_MAX_TOTAL_SIZE, ZIP_MAX_RATIO
 from file_manager.audit import log_event
 from file_manager.files import validate_filename, read_file, create_file
 
@@ -28,3 +28,38 @@ def create_zip(user_id, archive_name, filenames):
                 raise ValueError("Превышение допустимого размера архива")
             archive.writestr(filename, data)
     return create_file(user_id, archive_name, buffer.getvalue())
+
+
+def extract_zip(user_id, archive_name):
+    """Распаковывает zip-архив"""
+    data = read_file(user_id, archive_name)
+    try:
+        archive = zipfile.ZipFile(io.BytesIO(data))
+    except zipfile.BadZipFile:
+        raise ValueError("Файл не является корректным zip-архивом") from None
+    with archive:
+        members = archive.infolist()
+        if len(members) > ZIP_MAX_FILES:
+            log_event("limit_exceeded", user_id, repr(archive_name))
+            raise ValueError("Слишком большое количество файлов в архиве")
+        total = 0
+        names = []
+        for info in members:
+            if info.is_dir():
+                raise ValueError("Архив содержит папки")
+            try:
+                validate_filename(info.filename)
+            except ValueError:
+                log_event("access_denied", user_id, repr(archive_name))
+                raise ValueError("Недопустимое имя файла в архиве") from None
+            if info.filename in names:
+                raise ValueError("Имена файлов в архиве повторяются")
+            total += info.file_size
+            if total > ZIP_MAX_TOTAL_SIZE:
+                log_event("limit_exceeded", user_id, repr(archive_name))
+                raise ValueError("Превышение допустимого размера архива")
+            if (info.compress_size * ZIP_MAX_RATIO) < info.file_size:
+                log_event("limit_exceeded", user_id, repr(archive_name))
+                raise ValueError("Слишком большой коэффициент сжатия")
+            names.append(info.filename)
+        return names
