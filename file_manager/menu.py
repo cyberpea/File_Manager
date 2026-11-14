@@ -1,6 +1,7 @@
 import getpass
 
 from file_manager import auth
+from file_manager import disks
 
 
 def auth_menu():
@@ -37,13 +38,42 @@ def auth_menu():
             print("Нет такого пункта")
 
 
+def main_menu(user_id):
+    """Главное меню. Возвращается, когда пользователь выходит из аккаунта"""
+    while True:
+        print()
+        print("1. Диски")
+        print("0. Выйти из аккаунта")
+        choice = input("> ").strip()
+
+        if choice == "1":
+            show_disks()
+        elif choice == "0":
+            return
+        else:
+            print("Нет такого пункта")
+
+
+def show_disks():
+    for disk in disks.get_disks():
+        print()
+        print("Устройство:", disk["device"])
+        print("Точка монтирования:", disk["mountpoint"])
+        print("Файловая система:", disk["fstype"])
+        print("Хранилище:")
+        print(f"\t-Использовано: {disk["used"] / 1024**3:.1f} ГБ")
+        print(f"\t-Свободно: {disk["free"] / 1024**3:.1f} ГБ")
+        print(f"\t-Всего: {disk["total"] / 1024**3:.1f} ГБ")
+
+
 def run():
     try:
-        user_id = auth_menu()
-        if user_id is None:
-            print("До свидания")
-            return
-        print(f"Вход выполнен, id = {user_id}")
+        while True:
+            user_id = auth_menu()
+            if user_id is None:
+                print("До свидания")
+                return
+            main_menu(user_id)
     except (KeyboardInterrupt, EOFError):
         print()
         print("До свидания")
