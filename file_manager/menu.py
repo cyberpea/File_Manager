@@ -45,6 +45,7 @@ def main_menu(user_id):
         print()
         print("1. Диски")
         print("2. Прочитать файл")
+        print("3. Показать файлы")
         print("0. Выйти из аккаунта")
         choice = input("> ").strip()
 
@@ -52,6 +53,8 @@ def main_menu(user_id):
             show_disks()
         elif choice == "2":
             show_file(user_id)
+        elif choice == "3":
+            show_files(user_id)
         elif choice == "0":
             return
         else:
@@ -77,8 +80,7 @@ def show_file(user_id):
     except ValueError as error:
         print(error)
         return
-    data = _safe_text(data)
-    print(data)
+    print(_safe_text(data))
 
 
 def _safe_text(data):
@@ -90,6 +92,15 @@ def _safe_text(data):
         else:
             result += "?"
     return result
+
+
+def show_files(user_id):
+    rows = files.list_files(user_id)
+    if not rows:
+        print("Файлов нет")
+    else:
+        for filename, size, created_at in rows:
+            print(f"{filename}: {size} bytes, {created_at}")
 
 
 def run():

@@ -135,3 +135,16 @@ def delete_file(user_id, filename):
     finally:
         connection.close()
     return path
+
+
+def list_files(user_id):
+    """Возвращает список файлов пользователя"""
+    connection = get_connection()
+    try:
+        rows = connection.execute(
+            "SELECT filename, size, created_at FROM files WHERE owner_id = ? ORDER BY filename",
+            (user_id,),
+        ).fetchall()
+        return rows
+    finally:
+        connection.close()
