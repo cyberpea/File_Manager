@@ -1,4 +1,5 @@
 import getpass
+from random import choice
 
 from file_manager import auth
 from file_manager import disks
@@ -46,6 +47,9 @@ def main_menu(user_id):
         print("1. Диски")
         print("2. Прочитать файл")
         print("3. Показать файлы")
+        print("4. Создать файл")
+        print("5. Редактировать файл")
+        print("6. Удалить файл")
         print("0. Выйти из аккаунта")
         choice = input("> ").strip()
 
@@ -55,6 +59,12 @@ def main_menu(user_id):
             show_file(user_id)
         elif choice == "3":
             show_files(user_id)
+        elif choice == "4":
+            create_file_menu(user_id)
+        elif choice == "5":
+            modify_file_menu(user_id)
+        elif choice == "6":
+            delete_file_menu(user_id)
         elif choice == "0":
             return
         else:
@@ -101,6 +111,45 @@ def show_files(user_id):
     else:
         for filename, size, created_at in rows:
             print(f"{filename}: {size} bytes, {created_at}")
+
+
+def create_file_menu(user_id):
+    filename = input("Введите имя файла: ")
+    data = input("Введите содержимое файла одной строкой:\n")
+    try:
+        files.create_file(user_id, filename, data.encode("utf-8"))
+        print("Файл создан")
+    except ValueError as error:
+        print(error)
+
+
+def modify_file_menu(user_id):
+    filename = input("Введите имя файла: ")
+    data = input("Введите новое содержимое файла одной строкой:\n")
+    try:
+        files.modify_file(user_id, filename, data.encode("utf-8"))
+        print("Файл изменен")
+    except ValueError as error:
+        print(error)
+
+
+def delete_file_menu(user_id):
+    filename = input("Введите имя файла: ")
+    while True:
+        choice = input("Удалить файл? (да/нет): ")
+        if choice == "да":
+            try:
+                files.delete_file(user_id, filename)
+                print("Файл удален")
+                return
+            except ValueError as error:
+                print(error)
+                return
+        elif choice == "нет":
+            print("Удаление файла отменено")
+            return
+        else:
+            print("Введите 'да' или 'нет'")
 
 
 def run():
