@@ -1,9 +1,10 @@
 import io
 import zipfile
+import zlib
 
-from file_manager.config import ZIP_MAX_FILES, ZIP_MAX_TOTAL_SIZE, ZIP_MAX_RATIO
+from file_manager.config import ZIP_MAX_FILES, ZIP_MAX_TOTAL_SIZE, ZIP_MAX_RATIO, MAX_FILE_SIZE
 from file_manager.audit import log_event
-from file_manager.files import validate_filename, read_file, create_file
+from file_manager.files import validate_filename, read_file, create_file, delete_file
 
 
 def create_zip(user_id, archive_name, filenames):
@@ -62,4 +63,29 @@ def extract_zip(user_id, archive_name):
                 log_event("limit_exceeded", user_id, repr(archive_name))
                 raise ValueError("Слишком большой коэффициент сжатия")
             names.append(info.filename)
-        return names
+        contents = []
+        real_total = 0
+        for info in members:
+            try:
+                with archive.open(info) as member:
+                    data = member.read(MAX_FILE_SIZE + 1)
+            except (zipfile.BadZipFile, zlib.error, RuntimeError, EOFError):
+                raise ValueError("Архив поврежден или не поддерживается") from None
+            if len(data) > MAX_FILE_SIZE:
+                log_event("limit_exceeded", user_id, repr(archive_name))
+                raise ValueError("Слишком большой файл внутри архива")
+            real_total += len(data)
+            if real_total > ZIP_MAX_TOTAL_SIZE:
+                log_event("limit_exceeded", user_id, repr(archive_name))
+                raise ValueError("Превышение допустимого размера архива")
+            contents.append((info.filename, data))
+    created = []
+    try:
+        for name, data in contents:
+            create_file(user_id, name, data)
+            created.append(name)
+    except ValueError:
+        for name in created:
+            delete_file(user_id, name)
+        raise
+    return created
