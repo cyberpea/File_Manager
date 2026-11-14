@@ -19,6 +19,8 @@ FILENAME_PATTERN = r"[\w.\- ]{1,100}"
 JSON_MAX_DEPTH = 50
 XML_MAX_DEPTH = 50
 XML_NAME_PATTERN = r"[A-Za-z_][A-Za-z0-9_.\-]{0,63}"
+ZIP_MAX_FILES = 100
+ZIP_MAX_TOTAL_SIZE = 50 * 1024 * 1024
 
 
 def ensure_directories():
