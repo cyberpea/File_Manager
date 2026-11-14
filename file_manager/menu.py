@@ -2,6 +2,7 @@ import getpass
 
 from file_manager import auth
 from file_manager import disks
+from file_manager import files
 
 
 def auth_menu():
@@ -43,11 +44,14 @@ def main_menu(user_id):
     while True:
         print()
         print("1. Диски")
+        print("2. Прочитать файл")
         print("0. Выйти из аккаунта")
         choice = input("> ").strip()
 
         if choice == "1":
             show_disks()
+        elif choice == "2":
+            show_file(user_id)
         elif choice == "0":
             return
         else:
@@ -64,6 +68,28 @@ def show_disks():
         print(f"\t-Использовано: {disk["used"] / 1024**3:.1f} ГБ")
         print(f"\t-Свободно: {disk["free"] / 1024**3:.1f} ГБ")
         print(f"\t-Всего: {disk["total"] / 1024**3:.1f} ГБ")
+
+
+def show_file(user_id):
+    filename = input("Имя файла: ")
+    try:
+        data = files.read_file(user_id, filename)
+    except ValueError as error:
+        print(error)
+        return
+    data = _safe_text(data)
+    print(data)
+
+
+def _safe_text(data):
+    text = data.decode("utf-8", errors="replace")
+    result = ""
+    for ch in text:
+        if ch.isprintable() or ch in ["\n", "\t"]:
+            result += ch
+        else:
+            result += "?"
+    return result
 
 
 def run():
