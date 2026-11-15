@@ -1,4 +1,5 @@
 import json
+import math
 import xml.etree.ElementTree as ET
 import re
 from defusedxml import ElementTree as DET, DefusedXmlException
@@ -13,7 +14,7 @@ def read_json(user_id, filename):
     data = read_file(user_id, filename)
     try:
         text = data.decode("utf-8")
-        result = json.loads(text, parse_constant=_reject_constant)
+        result = json.loads(text, parse_constant=_reject_constant, parse_float=_parse_float)
     except ValueError:
         raise ValueError("Файл не является корректным JSON") from None
     except RecursionError:
@@ -46,6 +47,14 @@ def _is_too_deep(obj):
 def _reject_constant(name):
     """Запрещает NaN и Infinity: их нет в стандарте JSON"""
     raise ValueError("Некорректные данные в файле")
+
+
+def _parse_float(text):
+    """Запрещает числа вроде 1e999: они не помещаются в float и превращаются в бесконечность"""
+    value = float(text)
+    if math.isinf(value):
+        raise ValueError("Некорректные данные в файле")
+    return value
 
 
 def write_json(user_id, filename, obj, overwrite=False):
@@ -98,7 +107,7 @@ def write_xml(user_id, filename, root, overwrite=False):
     if _xml_too_deep(root):
         log_event("limit_exceeded", user_id, repr(filename))
         raise ValueError("Слишком глубокая вложенность")
-    if not  _xml_names_ok(root):
+    if not _xml_names_ok(root):
         raise ValueError("Недопустимое содержание файла")
     try:
         data = ET.tostring(root, encoding="utf-8", xml_declaration=True)

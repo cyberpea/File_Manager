@@ -8,6 +8,9 @@ from file_manager.db import get_connection
 
 def resolve_safe_path(user_id, user_path):
     """Возвращает абсолютный путь внутри папки пользователя или бросает ValueError"""
+    if "\0" in user_path:
+        log_event("access_denied", user_id, repr(user_path))
+        raise ValueError("Недопустимое имя файла")
     user_dir = (STORAGE_DIR / str(user_id)).resolve()
     target = (user_dir / user_path).resolve()
     if not target.is_relative_to(user_dir):

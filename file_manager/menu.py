@@ -204,7 +204,6 @@ def show_json(user_id):
     except ValueError as error:
         print(error)
         return
-    # dumps экранирует не все опасные символы, поэтому текст идёт через _clean
     print(_clean(json.dumps(obj, ensure_ascii=False, indent=2)))
 
 
@@ -230,7 +229,6 @@ def show_xml(user_id):
     except ValueError as error:
         print(error)
         return
-    # Обход дерева без рекурсии, как в formats._xml_too_deep: список пар (элемент, глубина)
     todo = [(root, 0)]
     while todo:
         element, depth = todo.pop()
@@ -240,7 +238,6 @@ def show_xml(user_id):
         if element.text is not None and element.text.strip():
             line += ": " + element.text.strip()
         print(_clean(line))
-        # pop берёт с конца, поэтому детей кладём в обратном порядке
         for child in reversed(element):
             todo.append((child, depth + 1))
 
