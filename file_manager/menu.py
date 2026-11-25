@@ -1,8 +1,7 @@
 import getpass
 import json
+import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
-
-from file_manager.xmltree import Element, SubElement
 
 from file_manager import archives
 from file_manager import audit
@@ -245,13 +244,13 @@ def show_xml(user_id):
 
 def write_xml_menu(user_id):
     filename = input("Введите имя файла: ")
-    root = Element(input("Имя корневого элемента: "))
+    root = ET.Element(input("Имя корневого элемента: "))
     print("Вложенные элементы. Пустое имя - закончить")
     while True:
         tag = input("Имя элемента: ")
         if tag == "":
             break
-        child = SubElement(root, tag)
+        child = ET.SubElement(root, tag)
         child.text = input("Текст элемента: ")
     try:
         formats.write_xml(user_id, filename, root)

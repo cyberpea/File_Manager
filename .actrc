@@ -1,5 +1,0 @@
--P ubuntu-latest=catthehacker/ubuntu:act-latest
---env ACT=true
---pull=false
---action-offline-mode
---bind

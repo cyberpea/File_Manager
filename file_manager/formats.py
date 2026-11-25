@@ -1,9 +1,8 @@
 import json
 import math
+import xml.etree.ElementTree as ET
 import re
 from defusedxml import ElementTree as DET, DefusedXmlException
-
-from file_manager.xmltree import Element, tostring
 
 from file_manager.files import read_file, modify_file, create_file
 from file_manager.audit import log_event
@@ -103,7 +102,7 @@ def _xml_too_deep(root):
 
 def write_xml(user_id, filename, root, overwrite=False):
     """Сохраняет дерево элементов как XML-файл пользователя"""
-    if not isinstance(root, Element):
+    if not isinstance(root, ET.Element):
         raise ValueError("Ожидается XML-элемент")
     if _xml_too_deep(root):
         log_event("limit_exceeded", user_id, repr(filename))
@@ -111,7 +110,7 @@ def write_xml(user_id, filename, root, overwrite=False):
     if not _xml_names_ok(root):
         raise ValueError("Недопустимое содержание файла")
     try:
-        data = tostring(root, encoding="utf-8", xml_declaration=True)
+        data = ET.tostring(root, encoding="utf-8", xml_declaration=True)
         DET.fromstring(data, forbid_dtd=True)
     except TypeError:
         raise ValueError("Данные нельзя сохранить как XML") from None
