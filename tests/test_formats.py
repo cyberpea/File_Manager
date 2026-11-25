@@ -1,4 +1,4 @@
-import xml.etree.ElementTree as ET
+from file_manager.xmltree import Element, SubElement
 
 import pytest
 
@@ -159,9 +159,9 @@ def test_too_deep_xml_is_rejected(user_id, events):
 
 
 def test_xml_roundtrip(user_id):
-    root = ET.Element("note")
+    root = Element("note")
     root.set("id", "1")
-    child = ET.SubElement(root, "to")
+    child = SubElement(root, "to")
     child.text = "Вика <b>&</b>"
     write_xml(user_id, "note.xml", root)
     loaded = read_xml(user_id, "note.xml")
@@ -182,15 +182,15 @@ def test_xml_roundtrip(user_id):
     42,
 ])
 def test_bad_tag_name_is_not_written(user_id, bad_tag):
-    root = ET.Element("root")
-    ET.SubElement(root, "ok").append(ET.Element(bad_tag))
+    root = Element("root")
+    SubElement(root, "ok").append(Element(bad_tag))
     with pytest.raises(ValueError):
         write_xml(user_id, "data.xml", root)
     assert list_files(user_id) == []
 
 
 def test_bad_attribute_name_is_not_written(user_id):
-    root = ET.Element("root")
+    root = Element("root")
     root.set('a="1" admin', "true")
     with pytest.raises(ValueError):
         write_xml(user_id, "data.xml", root)
@@ -198,7 +198,7 @@ def test_bad_attribute_name_is_not_written(user_id):
 
 
 def test_attribute_value_is_escaped(user_id):
-    root = ET.Element("root")
+    root = Element("root")
     root.set("name", '"><admin>true</admin><x a="')
     write_xml(user_id, "data.xml", root)
     loaded = read_xml(user_id, "data.xml")
@@ -208,7 +208,7 @@ def test_attribute_value_is_escaped(user_id):
 
 @pytest.mark.parametrize("bad_text", ["a\x00b", "a\x1bb", 42])
 def test_unwritable_text_is_not_written(user_id, bad_text):
-    root = ET.Element("root")
+    root = Element("root")
     root.text = bad_text
     with pytest.raises(ValueError):
         write_xml(user_id, "data.xml", root)
@@ -221,17 +221,17 @@ def test_not_an_element_is_not_written(user_id):
 
 
 def test_too_deep_tree_is_not_written(user_id):
-    root = ET.Element("a")
+    root = Element("a")
     current = root
     for level in range(XML_MAX_DEPTH):
-        current = ET.SubElement(current, "a")
+        current = SubElement(current, "a")
     with pytest.raises(ValueError):
         write_xml(user_id, "deep.xml", root)
     assert list_files(user_id) == []
 
 
 def test_written_xml_has_no_doctype(user_id):
-    root = ET.Element("root")
+    root = Element("root")
     root.text = "<!DOCTYPE x [<!ENTITY e SYSTEM 'file:///etc/passwd'>]>&e;"
     write_xml(user_id, "data.xml", root)
     assert b"<!DOCTYPE" not in read_file(user_id, "data.xml")

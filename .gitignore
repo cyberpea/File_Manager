@@ -1,5 +1,6 @@
 # Secrets
 .env
+.secrets
 
 # OS
 .DS_Store
@@ -20,4 +21,10 @@ data/
 # App Data
 storage/
 
+# CI/CD
+reports/
+dist/
+.cache/
+
 CLAUDE.md
+Claude outputs/
